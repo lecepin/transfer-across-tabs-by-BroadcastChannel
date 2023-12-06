@@ -1,7 +1,9 @@
 # transfer-across-tabs-by-BroadcastChannel
-量子纠缠效果实现，灵感自 https://github.com/bgstaal/multipleWindow3dScene。
+量子纠缠效果实现，灵感自 https://github.com/bgstaal/multipleWindow3dScene
 
 基于 BroadcastChannel API 实现。
+
+在线效果： https://lecepin.github.io/transfer-across-tabs-by-BroadcastChannel/
 
 ![](https://github.com/lecepin/transfer-across-tabs-by-BroadcastChannel/assets/11046969/387ef07e-2828-47d7-b8f7-a04f1dfc26f9)
 
