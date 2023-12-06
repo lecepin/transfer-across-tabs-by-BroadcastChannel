@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body,
+    html {
+      height: 100%;
+    }
+
+    .arrow {
+      width: 80vmin;
+      height: 80vmin;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    #center {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: red;
+      z-index: 999;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #msg {
+      position: absolute;
+      left: 1em;
+      top: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="center"></div>
+  <div id="msg"></div>
+
+  <script>
+    const otherWindows = new Map();
+    const channel = new BroadcastChannel('tab_position_channel');
+    const wId = Date.now() + '-' + Math.random();
+    let _new = true;
+    const MSG_TYPE = {
+      POSITION: 0,
+      NEW: 1,
+      REMOVE: 2,
+      OTHER: 3
+    };
+    const lastPosition = {
+      x: 0,
+      y: 0
+    };
+
+    window.onunload = () => {
+      channel.postMessage({
+        type: MSG_TYPE.REMOVE,
+        wId
+      });
+    };
+
+    channel.onmessage = ({ data: { type, x, y, wId: otherId } }) => {
+      console.log(`type: ${type}, x: ${x}, y: ${y}, wId: ${wId}`)
+      switch (type) {
+        case MSG_TYPE.NEW:
+          _AddWin({ otherId, x, y })
+
+          channel.postMessage({
+            type: MSG_TYPE.OTHER,
+            x: lastPosition.x,
+            y: lastPosition.y,
+            wId
+          });
+
+          break;
+        case MSG_TYPE.POSITION:
+          otherWindows.set(otherId, {
+            x,
+            y
+          });
+
+          [...otherWindows.keys()].forEach(otherId => {
+            const arrow = document.getElementById(otherId);
+            const { x, y } = otherWindows.get(otherId);
+            arrow.style.transform = `translate(-50%, -50%) rotate(${Math.atan2(lastPosition.y - y, lastPosition.x - x) * 180 / Math.PI}deg)`;
+          });
+
+          break;
+        case MSG_TYPE.OTHER:
+          if (!otherWindows.has(otherId)) {
+            _AddWin({ otherId, x, y })
+          }
+          break
+        case MSG_TYPE.REMOVE:
+          otherWindows.delete(otherId);
+          document.getElementById(otherId)?.remove();
+          break;
+
+
+      }
+
+
+    };
+
+    function _AddWin({ otherId, x, y }) {
+      otherWindows.set(otherId, {
+        x,
+        y
+      });
+
+      const arrow = document.createElement('img');
+      arrow.src = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%221000%22%3E%3Cpath%20fill%3D%22currentColor%22%20fill-opacity%3D%22.8%22%20d%3D%22M1005%20530.682H217.267v-61.364H1005v61.363z%22%2F%3E%3Cpath%20fill%3D%22currentColor%22%20fill-opacity%3D%22.8%22%20d%3D%22M217.989%20581.415%204%20503.552l213.989-79.967z%22%2F%3E%3C%2Fsvg%3E'
+      arrow.className = 'arrow';
+      arrow.id = otherId;
+      arrow.style.transform = `translate(-50%, -50%) rotate(${Math.atan2(lastPosition.y - y, lastPosition.x - x) * 180 / Math.PI}deg)`;
+      document.body.appendChild(arrow);
+    }
+
+    function render() {
+      requestAnimationFrame(() => {
+        const absoluteCenter = {
+          x: window.screenX/* + (window.outerWidth - window.innerWidth)*/ + window.innerWidth / 2,
+          y: window.screenY + (window.outerHeight - window.innerHeight) + window.innerHeight / 2
+        };
+
+        if (absoluteCenter.x !== lastPosition.x || absoluteCenter.y !== lastPosition.y) {
+
+          lastPosition.x = absoluteCenter.x;
+          lastPosition.y = absoluteCenter.y;
+
+          if (_new) {
+            _new = false;
+            channel.postMessage({
+              type: MSG_TYPE.NEW,
+              x: lastPosition.x,
+              y: lastPosition.y,
+              wId
+            });
+          } else {
+            channel.postMessage({
+              type: MSG_TYPE.POSITION,
+              x: absoluteCenter.x,
+              y: absoluteCenter.y,
+              wId
+            });
+          }
+
+          otherWindows.forEach(({ x, y }, otherId) => {
+            const angle = Math.atan2(lastPosition.y - y, lastPosition.x - x) * 180 / Math.PI;
+            document.getElementById(otherId).style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+          });
+        }
+
+        msg.innerHTML = otherWindows.size === 0 ? '未发现其他窗口' : `发现窗口: <ol>${[...otherWindows.keys()].map(it => `<li>${it}</li>`).join('')}</ol>`;
+        render();
+      });
+    }
+
+    render();
+  </script>
+</body>
+
+</html>
