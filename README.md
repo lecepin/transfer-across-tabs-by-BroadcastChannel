@@ -12,3 +12,8 @@
 ![](https://github.com/lecepin/transfer-across-tabs-by-BroadcastChannel/assets/11046969/c6ca215f-4270-49d6-b630-bf76b916e7cd)
 
 ![](https://github.com/lecepin/transfer-across-tabs-by-BroadcastChannel/assets/11046969/c597aa3f-d320-4e99-9103-efd0b2db47b8)
+
+---
+
+- https://caniuse.com/mdn-api_storageevent
+- https://caniuse.com/broadcastchannel
